@@ -8,7 +8,7 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        # 1 canal de intrare pt imagine, 6 canale de iesire si 5x5 square convolution
+        # 1 canal de intrare, 6 canale de iesire si 5x5 square convolution
         #kernel
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
