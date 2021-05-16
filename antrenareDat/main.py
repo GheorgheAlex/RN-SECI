@@ -61,7 +61,9 @@ def test(args, model, device, test_loader):
 
 
 def main():
-    # Training settings
+    # Training settings ? De ce a folosit asa sa transfere argumentele?
+    # ?Cum functioneaza parser-ul? De ce nu au fost stocate in niste variabile ci au fost folosite argumente?
+
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
@@ -76,7 +78,7 @@ def main():
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
+                        help='random seed (default: 1)') # ? Ce reprezinta seed-ul?
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
 
@@ -90,13 +92,17 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+
+    ## Preluare informatii pentru antrenament
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=True, download=True,
                        transform=transforms.Compose([
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                        ])),
-        batch_size=args.batch_size, shuffle=True, **kwargs)
+                        batch_size=args.batch_size, shuffle=True, **kwargs)
+
+    ## Preluare informatii pentru testare
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
@@ -104,7 +110,7 @@ def main():
         ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-    model = Net().to(device)
+    model = Net().to(device) # transferul retelei catre placa video sau procesor
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
     for epoch in range(1, args.epochs + 1):
@@ -117,3 +123,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# epoch cred ca semnifica generatia retelei neurale

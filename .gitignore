@@ -5,3 +5,13 @@ pytorchLearning/data/cifar-10-batches-py/data_batch_2
 pytorchLearning/data/cifar-10-batches-py/data_batch_3
 pytorchLearning/data/cifar-10-batches-py/data_batch_4
 pytorchLearning/data/cifar-10-batches-py/data_batch_5
+data/MNIST/raw/t10k-labels-idx1-ubyte.gz
+data/MNIST/raw/train-labels-idx1-ubyte.gz
+data/MNIST/raw/train-labels-idx1-ubyte
+data/MNIST/raw/train-images-idx3-ubyte.gz
+data/MNIST/raw/train-images-idx3-ubyte
+data/MNIST/raw/t10k-labels-idx1-ubyte
+data/MNIST/raw/t10k-images-idx3-ubyte.gz
+data/MNIST/raw/t10k-images-idx3-ubyte
+data/MNIST/processed/training.pt
+data/MNIST/processed/test.pt
