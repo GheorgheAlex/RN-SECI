@@ -37,17 +37,6 @@ def imshow(img):
         plt.show()
 #---------------------------------------------------#
 
-#-------- Functia de afisare a unei imagini din baza de date de antrenament --------#
-# def imageTrainShow(database, classes, batch_size):
-#     for i, data, in enumerate(database):
-#         dataiter = iter(database)
-#         # get some random training images
-#         images, labels = dataiter.next()
-#         # show images
-#         imshow(torchvision.utils.make_grid(images))
-#         print(' '.join('%5s' % classes[labels[j]] for j in range(batch_size)))
-#-----------------------------------------------------------------------------------#
-
 #-------- Functia de antrenare data a retelei neurale --------#
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -84,44 +73,29 @@ def test(args, model, device, test_loader):
         100. * correct / len(test_loader.dataset)))
 #------------------------------------------------------#
 
+#-------- Rezolvare punct 7  --------#
+def imageShow(database):
+    for i, data, in enumerate(database):
+        dataiter = iter(database)
+        # get some random training images
+        images, labels = dataiter.next()
+        # show images
+        imshow(torchvision.utils.make_grid(images))
+        break
+#------------------------------------#
 
-#------------------ Rezolvare punctul 9 ------------------#
-
-# Cred ca as putea sa fac asa:
-# - initializez 3 variabile cu imagini random din baza de date de validare
-# - fac un for loop prin care sa trec fiecare imagine si sa o afisez impreuna cu label-ul
-# - totul va fi trimis cu un iterator
-
-# !!! Cauta o metoda prin care sa limitezi numarul de imagini incarcate
-
-# plt.imshow(out, vmin=0, vmax=255)
-
-def gen_image(arr):
-    two_d = (np.reshape(arr, (28, 28)) * 255).astype(np.uint8)
-    plt.imshow(two_d, interpolation='nearest')
-    return plt
-
-def vizualizareImaginiValidare(database):
+#-------- Rezolvare punct 9  --------#
+def imageShowLabels(database):
     classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
-    # for i, data, in enumerate(database):
-    #     dataiter = iter(database)
-    #     # get some random training images
-    #     images, labels = dataiter.next()
-    #     # show images
-    #     imshow(torchvision.utils.make_grid(images))
-    #     print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
-
-    for i in range(3):
-        listaValidare = list(database)
-
-        images, labels = listaValidare[i]
-        # imshow(torchvision.utils.make_grid(images))
-        imshow(images)
+    for i, data, in enumerate(database):
+        dataiter = iter(database)
+        # get some random training images
+        images, labels = dataiter.next()
+        # show images
+        imshow(torchvision.utils.make_grid(images))
         print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
-#---------------------------------------------------------#
-
-
-
+        break
+#------------------------------------#
 
 def main():
     # Training settings ? De ce a folosit asa sa transfere argumentele?
@@ -147,7 +121,6 @@ def main():
                         help='random seed (default: 1)') # ? Ce reprezinta seed-ul?
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
-
     parser.add_argument('--save-model', action='store_true', default=False,
                         help='For Saving the current Model')
     args = parser.parse_args()
@@ -159,7 +132,7 @@ def main():
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    # Baza de date de antrenament
+    # Incarcare baza de date de antrenament
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=True, download=True,
                        transform=transforms.Compose([
@@ -168,15 +141,16 @@ def main():
                        ])),
                         batch_size=args.batch_size, shuffle=True, **kwargs)
 
-    # train_loader_img = torch.utils.data.DataLoader(
-    #     datasets.MNIST('../data', train=True, download=True,
-    #                    transform=transforms.Compose([
-    #                        transforms.ToTensor(),
-    #                        transforms.Normalize((0.1307,), (0.3081,))
-    #                    ])),
-    #     batch_size=3, shuffle=True, **kwargs)
+    # Incarcare a 3 imagini din baza de date de antrenament
+    train_loader_img = torch.utils.data.DataLoader(
+        datasets.MNIST('../data', train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])),
+        batch_size=3, shuffle=True, **kwargs)
 
-    # Baza de date de validare
+    # Incarcare baza de date de validare
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
@@ -184,21 +158,29 @@ def main():
         ])),
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
-    ## Rezolvare punct 9
-    gen_image(test_loader[0]).show()
-    gen_image(test_loader[1]).show()
+    # 3 imagini aleatorii luate din baza de date validare pentru testare
+    test_loader_img = torch.utils.data.DataLoader(
+        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size= 3, shuffle=True, **kwargs)
 
+    #------- Rezolvare pct 7 -------#
+    imageShow(train_loader_img)
+    #-------------------------------#
 
-    # vizualizareImaginiValidare(database = test_loader)
-
+    # ------- Rezolvare pct 9 -------#
+    imageShowLabels(test_loader_img)
+    # -------------------------------#
 
     model = Net().to(device) # transferul retelei catre placa video sau procesor
-    # optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
     ## Rularea functiilor de antrenare si validare a retelei neurale
-    # for epoch in range(1, args.epochs + 1):
+    for epoch in range(1, args.epochs + 1):
     #    train(args, model, device, train_loader, optimizer, epoch)
-    #    test(args, model, device, test_loader)
+       test(args, model, device, test_loader_img)
 
     if (args.save_model):
         torch.save(model.state_dict(), "mnist_cnn.pt")
