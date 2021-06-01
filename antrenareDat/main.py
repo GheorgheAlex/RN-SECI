@@ -29,10 +29,39 @@ class Net(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
+# Incercare de retea neurala (structura momentan nefunctionala)
+
+
+
+# class Net(nn.Module):
+#
+#    def __init__(self):
+#        super(Net, self).__init__()
+#        self.conv1 = nn.Conv2d(in_channels = 1, out_channels = 20, kernel_size = 5, stride = 1)
+#        self.conv2 = nn.Conv2d(in_channels = 20, out_channels = 50, kernel_size = 3, stride = 1)
+#        self.conv3 = nn.Conv2d(in_channels= 50, out_channels = 100, kernel_size = 2, stride=1)
+#        self.fc1 = nn.Linear(in_features = 8 * 8 * 100, out_features = 500)
+#        self.fc2 = nn.Linear(in_features = 500, out_features = 10)
+#
+#    def forward(self, x):
+#        x = F.relu(self.conv1(x))
+#        x = F.max_pool2d(x, 2, 2)
+#        x = F.relu(self.conv2(x))
+#        x = F.max_pool2d(x, 2, 2)
+#        x = F.relu(self.conv3(x))
+#        x = F.max_pool2d(x, 2, 2)
+#        print(x.shape)
+#        x = x.view(-1, 4 * 4 * 100)
+#        x = F.relu(self.fc1(x))
+#        x = self.fc2(x)
+#
+#        return F.log_softmax(x, dim=1)
+
 #-------- Functia de afisare a unei imagini --------#
-def imshow(img):
+def imshow(img, title):
         img = img / 2 + 0.5  # unnormalize
         npimg = img.numpy()
+        plt.title(title)
         plt.imshow((np.transpose(npimg, (1, 2, 0))))
         plt.show()
 #---------------------------------------------------#
@@ -85,15 +114,16 @@ def imageShow(database):
 #------------------------------------#
 
 #-------- Rezolvare punct 9  --------#
-def imageShowLabels(database):
+def imageShowLabels(database, title):
     classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     for i, data, in enumerate(database):
         dataiter = iter(database)
         # get some random training images
         images, labels = dataiter.next()
         # show images
-        imshow(torchvision.utils.make_grid(images))
-        print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
+        print('Label: '.join('%5s' % classes[labels[j]] for j in range(1)))
+        imshow(torchvision.utils.make_grid(images), title)
+        # print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
         break
 #------------------------------------#
 
@@ -121,7 +151,7 @@ def main():
                         help='random seed (default: 1)') # ? Ce reprezinta seed-ul?
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--save-model', action='store_true', default=False,
+    parser.add_argument('--save-model', action='store_true', default=True,
                         help='For Saving the current Model')
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -159,31 +189,79 @@ def main():
         batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     # 3 imagini aleatorii luate din baza de date validare pentru testare
-    test_loader_img = torch.utils.data.DataLoader(
+    test_loader_img1 = torch.utils.data.DataLoader(
         datasets.MNIST('../data', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
         ])),
-        batch_size= 3, shuffle=True, **kwargs)
+        batch_size= 1, shuffle=True, **kwargs)
+
+    test_loader_img2 = torch.utils.data.DataLoader(
+        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=1, shuffle=True, **kwargs)
+
+    test_loader_img3 = torch.utils.data.DataLoader(
+        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=1, shuffle=True, **kwargs)
+
+    model = Net().to(device)  # Instantiere RN pe dispozitivul ales
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum) # Instantiere opimizator
 
     #------- Rezolvare pct 7 -------#
-    imageShow(train_loader_img)
+    # imageShow(train_loader_img)
     #-------------------------------#
 
-    # ------- Rezolvare pct 9 -------#
-    imageShowLabels(test_loader_img)
+    #_------- Rezolvare pct 9 -------#
+    # imageShowLabels(test_loader_img1, "imagine1")
+    # imageShowLabels(test_loader_img2, "imagine2")
+    # imageShowLabels(test_loader_img3, "imagine3")
     # -------------------------------#
 
-    model = Net().to(device) # transferul retelei catre placa video sau procesor
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+    #------- Rezolvare pct 10 -------#
 
-    ## Rularea functiilor de antrenare si validare a retelei neurale
-    for epoch in range(1, args.epochs + 1):
+    # Antrenarea retelei neurale folosind baza de date de antrenare
+    # for epoch in range(1, args.epochs + 1):
     #    train(args, model, device, train_loader, optimizer, epoch)
-       test(args, model, device, test_loader_img)
 
-    if (args.save_model):
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+    # Dupa antrenare se salveaza modelul
+    # if (args.save_model):
+    #     torch.save(model.state_dict(), "mnist_cnn.pt")
+    #     print("Am salvat reteaua neurala in memoria PC-ului")
+
+    # Se instantiaza modelul salvat intr-o alta variabila
+    newModel = Net()
+    newModel.load_state_dict(torch.load("mnist_cnn.pt"))
+    print("Am incarcat modelul salvat in variabila newModel")
+    newModel = Net().to(device)
+
+    # Rulare algoritm de validare folosind reteaua stocata
+
+    imageShowLabels(test_loader_img1, "imagine1")
+    test(args, newModel, device, test_loader_img1)
+
+    imageShowLabels(test_loader_img2, "imagine2")
+    test(args, newModel, device, test_loader_img2)
+
+    imageShowLabels(test_loader_img3, "imagine3")
+    test(args, newModel, device, test_loader_img3)
+
+
+    # -------------------------------#
+
+
+
+
+    # for epoch in range(1, args.epochs + 1):
+    #    train(args, model, device, train_loader, optimizer, epoch)
+    #    test(args, model, device, test_loader_img)
+
+
 
 
 if __name__ == '__main__':
