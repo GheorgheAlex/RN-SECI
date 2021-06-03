@@ -59,7 +59,14 @@ class Net(nn.Module):
 
 #-------- Functia de afisare a unei imagini --------#
 def imshow(img, title):
-        img = img / 2 + 0.5  # unnormalize
+        mean = 0.1307
+        standard = 0.3081
+        # img = img / 2 + 0.5  # unnormalize
+        img = (img * standard) + mean  # unnormalize
+
+        # 0.1307 mean
+        # 0.3081 standard
+
         npimg = img.numpy()
         plt.title(title)
         plt.imshow((np.transpose(npimg, (1, 2, 0))))
@@ -100,16 +107,35 @@ def test(args, model, device, test_loader):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+
+def testOutput(args, model, device, test_loader):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            correct += pred.eq(target.view_as(pred)).sum().item()
+
+    test_loss /= len(test_loader.dataset)
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+    print(model.eval())
 #------------------------------------------------------#
 
 #-------- Rezolvare punct 7  --------#
-def imageShow(database):
+def imageShow(database, title):
     for i, data, in enumerate(database):
         dataiter = iter(database)
         # get some random training images
         images, labels = dataiter.next()
         # show images
-        imshow(torchvision.utils.make_grid(images))
+        imshow(torchvision.utils.make_grid(images), title)
         break
 #------------------------------------#
 
@@ -213,17 +239,20 @@ def main():
     model = Net().to(device)  # Instantiere RN pe dispozitivul ales
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum) # Instantiere opimizator
 
-    #------- Rezolvare pct 7 -------#
-    # imageShow(train_loader_img)
-    #-------------------------------#
+    #----------------- Rezolvare pct 7 ------------------#
+    # Afisarea a 3 imagini din baza de date de antrenament
+    # imageShow(train_loader_img, "Training-images")
+    #----------------------------------------------------#
 
-    #_------- Rezolvare pct 9 -------#
+    #----------------- Rezolvare pct 9 ------------------#
+    # Afisarea a 3 imagini din baza de date de validare
     # imageShowLabels(test_loader_img1, "imagine1")
     # imageShowLabels(test_loader_img2, "imagine2")
     # imageShowLabels(test_loader_img3, "imagine3")
-    # -------------------------------#
+    #----------------------------------------------------#
 
-    #------- Rezolvare pct 10 -------#
+
+    #----------------- Rezolvare pct 10 ------------------#
 
     # Antrenarea retelei neurale folosind baza de date de antrenare
     # for epoch in range(1, args.epochs + 1):
@@ -243,17 +272,16 @@ def main():
     # Rulare algoritm de validare folosind reteaua stocata
 
     imageShowLabels(test_loader_img1, "imagine1")
-    test(args, newModel, device, test_loader_img1)
-
-    imageShowLabels(test_loader_img2, "imagine2")
-    test(args, newModel, device, test_loader_img2)
-
-    imageShowLabels(test_loader_img3, "imagine3")
-    test(args, newModel, device, test_loader_img3)
+    testOutput(args, newModel, device, test_loader_img1)
 
 
-    # -------------------------------#
+    # imageShowLabels(test_loader_img2, "imagine2")
+    # test(args, newModel, device, test_loader_img2)
 
+    # imageShowLabels(test_loader_img3, "imagine3")
+    # test(args, newModel, device, test_loader_img3)
+
+    #----------------------------------------------------#
 
 
 
