@@ -30,9 +30,6 @@ class Net(nn.Module):
         return F.log_softmax(x, dim=1)
 
 # Incercare de retea neurala (structura momentan nefunctionala)
-
-
-
 # class Net(nn.Module):
 #
 #    def __init__(self):
@@ -184,7 +181,7 @@ def main():
 
     torch.manual_seed(args.seed)
 
-    device = torch.device("cuda" if use_cuda else "cpu")
+    device = torch.device("cuda" if use_cuda else "cpu") # Incarcarea retelei neurale pe placa video sau pe cpu
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
@@ -251,7 +248,6 @@ def main():
     # imageShowLabels(test_loader_img3, "imagine3")
     #----------------------------------------------------#
 
-
     #----------------- Rezolvare pct 10 ------------------#
 
     # Antrenarea retelei neurale folosind baza de date de antrenare
@@ -271,8 +267,8 @@ def main():
 
     # Rulare algoritm de validare folosind reteaua stocata
 
-    imageShowLabels(test_loader_img1, "imagine1")
-    testOutput(args, newModel, device, test_loader_img1)
+    # imageShowLabels(test_loader_img1, "imagine1")
+    # test(args, newModel, device, test_loader_img1)
 
 
     # imageShowLabels(test_loader_img2, "imagine2")
@@ -284,12 +280,10 @@ def main():
     #----------------------------------------------------#
 
 
-
+    # Antrenarea si testarea propriu-zisa a retelei neurale
     # for epoch in range(1, args.epochs + 1):
     #    train(args, model, device, train_loader, optimizer, epoch)
     #    test(args, model, device, test_loader_img)
-
-
 
 
 if __name__ == '__main__':
