@@ -63,6 +63,25 @@ def imageShowLabels(image,labels, labelImageNumber, title):
 
 #-----------------------------------------------------------------------------#
 
+def testWholeBatch(args, model, device, test_loader):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            correct += pred.eq(target.view_as(pred)).sum().item()
+
+    test_loss /= len(test_loader.dataset)
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+
+
 #-------- Functia de validare a retelei neurale --------#
 def test(args, model, device, data, target):
     model.eval()
@@ -75,6 +94,10 @@ def test(args, model, device, data, target):
         pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
         correct += pred.eq(target.view_as(pred)).sum().item()
 
+        print(pred)
+        print(correct)
+        print(test_loss)
+
     # test_loss /= len(data.dataset)
 
     # print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
@@ -82,12 +105,19 @@ def test(args, model, device, data, target):
     #     100. * correct / len(test_loader.dataset)))
 #------------------------------------------------------#
 
-# Testing
+# Punctul 10
 def labelTest(model, testImage):
+    classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     model.eval()
     output = model(testImage)
-    pred = torch.argmax(output, 1)
-    print(pred)
+    # pred = torch.argmax(output, 1)
+    _, predicted = torch.max(output, 1)
+    print('Predicted: ', ' '.join('%5s' % classes[predicted[j]] for j in range(1)))
+
+
+
+
+
 
 
 def main():
@@ -98,7 +128,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--batch-size-img', type=int, default=3, metavar='N',
                         help='input training images to show to user (default: 3)')
-    parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
+    parser.add_argument('--test-batch-size', type=int, default=10000, metavar='N',
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
@@ -155,26 +185,46 @@ def main():
 
     # ----------------- Rezolvare pct 9 ------------------#
     # Afisarea a 3 imagini din baza de date de validare
-    # imageShowLabels(image1, labels, randomNumberImage1, "Image 1")
+    imageShowLabels(image1, labels, randomNumberImage1, "Image 1")
     # imageShowLabels(image2, labels, randomNumberImage2, "Image 2")
     # imageShowLabels(image3, labels, randomNumberImage3, "Image 3")
     # ----------------------------------------------------#
 
     # ----------------- Rezolvare pct 10 ------------------#
     # Se instantiaza modelul salvat intr-o alta variabila
-    newModel = Net()
-    newModel.load_state_dict(torch.load("mnist_cnn.pt"))
+    trainedModel = Net()
+    trainedModel.load_state_dict(torch.load("mnist_cnn.pt"))
     print("Am incarcat modelul salvat in variabila newModel")
-    newModel = Net().to(device)
+    trainedModel = Net().to(device)
 
     # Rulare algoritm de validare folosind reteaua stocata
-    # image1Net = image1.unsqueeze(1)
+    image1Net = image1.unsqueeze(1)
+    label1Net = label1.unsqueeze(0)
+    image2Net = image2.unsqueeze(1)
+    label2Net = label2.unsqueeze(0)
+    image3Net = image3.unsqueeze(1)
+    label3Net = label3.unsqueeze(0)
+
+    image1Net, label1Net = image1Net.to(device), label1Net.to(device)
+    image2Net, label2Net = image2Net.to(device), label2Net.to(device)
+    image3Net, label3Net = image3Net.to(device), label3Net.to(device)
+
+
     # labelTest(newModel, test_loader)
     # test(args, newModel, device, test_loader)
-    test(args, newModel, device, image1, label1)
+    # test(args, newModel, device, image1Net, label1Net)
+
+    labelTest(trainedModel, image1Net)
+    labelTest(trainedModel, image2Net)
+    labelTest(trainedModel, image3Net)
+
+    # testWholeBatch(args, trainedModel, device, test_loader)
 
     # ----------------------------------------------------#
 
+    # print(image1.shape)
+    # print(image1Net.shape)
+    # print (label1.shape)
 
 if __name__ == '__main__':
     main()
