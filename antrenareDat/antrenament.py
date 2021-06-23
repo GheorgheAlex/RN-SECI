@@ -9,26 +9,34 @@ import torchvision
 import matplotlib.pyplot as plt
 import numpy as np
 
-# NN care merge, mai trebuie drop-out si batch
 class Net(nn.Module):
 
    def __init__(self):
        super(Net, self).__init__()
        self.conv1 = nn.Conv2d(in_channels = 1, out_channels = 20, kernel_size = 5, stride = 1)
+       self.conv1_batch = nn.BatchNorm2d(20)
        self.conv2 = nn.Conv2d(in_channels = 20, out_channels = 50, kernel_size = 3, stride = 1)
+       self.conv2_batch = nn.BatchNorm2d(50)
        self.conv3 = nn.Conv2d(in_channels= 50, out_channels = 100, kernel_size = 3, stride=1)
+       self.conv3_batch = nn.BatchNorm2d(100)
+       self.dropout = nn.Dropout(0.7)
        self.fc1 = nn.Linear(in_features = 1 * 1 * 100, out_features = 500)
        self.fc2 = nn.Linear(in_features = 500, out_features = 10)
 
    def forward(self, x):
        x = F.relu(self.conv1(x))
        x = F.max_pool2d(x, 2, 2)
+       x = self.conv1_batch(x)
        x = F.relu(self.conv2(x))
-       x = F.max_pool2d(x, 2, 2)
+       x = F.max_pool2d(x, 2, 2 , 1)
+       x = self.conv2_batch(x)
        x = F.relu(self.conv3(x))
+       x = F.max_pool2d(x, 2, 2, 1)
        x = F.max_pool2d(x, 2, 2)
+       x = self.conv3_batch(x)
        x = x.view(-1, 1 * 1 * 100)
        x = F.relu(self.fc1(x))
+       x = self.dropout(x)
        x = self.fc2(x)
 
        return F.log_softmax(x, dim=1)
@@ -63,7 +71,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
                        100. * batch_idx / len(train_loader), loss.item()))
 #------------------------------------------------------------#
 
-#-------- Afisare imagini din baza de date ade antrenament  --------#
+#-------- Afisare imagini din baza de date de antrenament  --------#
 def imageShow(database, title):
     dataiter = iter(database)
     images, labels = dataiter.next()
@@ -76,7 +84,8 @@ def imageShowLabels(database, title):
     classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     dataiter = iter(database)
     images, labels = dataiter.next()
-    print('Label: '.join('%5s' % classes[labels[i]] for i in range(3))) # de rezolvat formatul la print cas a arat mai bine label-urile
+    print("Lables: ")
+    print(" ".join('%1s' % classes[labels[i]] for i in range(3))) # de rezolvat formatul la print cas a arat mai bine label-urile
     imshow(torchvision.utils.make_grid(images[0:3]), title)
     # print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
 
@@ -137,9 +146,12 @@ def main():
 
     # Antrenarea si testarea propriu-zisa a retelei neurale
     for epoch in range(1, args.epochs + 1):
-       train(args, model, device, train_loader, optimizer, epoch)
+        train(args, model, device, train_loader, optimizer, epoch)
 
 
+    if (args.save_model): # dupa antrenare se salveaza modelul
+        torch.save(model.state_dict(), "mnist_cnn.pt")
+        print("Saving trained neural network with name 'mnist_cnn.pt'")
 
 if __name__ == '__main__':
     main()
