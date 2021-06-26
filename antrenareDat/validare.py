@@ -19,7 +19,7 @@ class Net(nn.Module):
        self.conv2_batch = nn.BatchNorm2d(50)
        self.conv3 = nn.Conv2d(in_channels= 50, out_channels = 100, kernel_size = 3, stride=1)
        self.conv3_batch = nn.BatchNorm2d(100)
-       self.dropout = nn.Dropout(0.7)
+       self.dropout = nn.Dropout(0.25)
        self.fc1 = nn.Linear(in_features = 1 * 1 * 100, out_features = 500)
        self.fc2 = nn.Linear(in_features = 500, out_features = 10)
 
@@ -63,6 +63,7 @@ def imageShowLabels(image,labels, labelImageNumber, title):
 
 #-----------------------------------------------------------------------------#
 
+#-------- Functia de validare a retelei neurale folosind toata baza de date de validare --------#
 def testWholeBatch(args, model, device, test_loader):
     model.eval()
     test_loss = 0
@@ -80,7 +81,7 @@ def testWholeBatch(args, model, device, test_loader):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
-
+#-------------------------------------------------------------------------------------------------#
 
 #-------- Functia de validare a retelei neurale --------#
 def test(args, model, device, data, target):
@@ -113,12 +114,6 @@ def labelTest(model, testImage):
     # pred = torch.argmax(output, 1)
     _, predicted = torch.max(output, 1)
     print('Predicted: ', ' '.join('%5s' % classes[predicted[j]] for j in range(1)))
-
-
-
-
-
-
 
 def main():
 
@@ -180,24 +175,21 @@ def main():
     image3 = images[randomNumberImage3]
     label3 = labels[randomNumberImage3]
 
-
-    print(torch.is_tensor(image1))
-
-    # ----------------- Rezolvare pct 9 ------------------#
+    # ----------------- Rezolvare punct 9 ------------------#
     # Afisarea a 3 imagini din baza de date de validare
     imageShowLabels(image1, labels, randomNumberImage1, "Image 1")
-    # imageShowLabels(image2, labels, randomNumberImage2, "Image 2")
-    # imageShowLabels(image3, labels, randomNumberImage3, "Image 3")
+    imageShowLabels(image2, labels, randomNumberImage2, "Image 2")
+    imageShowLabels(image3, labels, randomNumberImage3, "Image 3")
     # ----------------------------------------------------#
 
-    # ----------------- Rezolvare pct 10 ------------------#
+    # ----------------- Rezolvare punct 10 ------------------#
     # Se instantiaza modelul salvat intr-o alta variabila
     trainedModel = Net()
     trainedModel.load_state_dict(torch.load("mnist_cnn.pt"))
-    print("Am incarcat modelul salvat in variabila newModel")
+    print("Am incarcat modelul salvat in variabila trainedModel")
     trainedModel = Net().to(device)
 
-    # Rulare algoritm de validare folosind reteaua stocata
+    # Conversie imagini inainte de a le incarca in retea
     image1Net = image1.unsqueeze(1)
     label1Net = label1.unsqueeze(0)
     image2Net = image2.unsqueeze(1)
@@ -205,26 +197,20 @@ def main():
     image3Net = image3.unsqueeze(1)
     label3Net = label3.unsqueeze(0)
 
+    # Se muta imagininile pe acelasi device pe care e reteaua
     image1Net, label1Net = image1Net.to(device), label1Net.to(device)
     image2Net, label2Net = image2Net.to(device), label2Net.to(device)
     image3Net, label3Net = image3Net.to(device), label3Net.to(device)
 
 
-    # labelTest(newModel, test_loader)
-    # test(args, newModel, device, test_loader)
-    # test(args, newModel, device, image1Net, label1Net)
-
+    # Incarcare imagini in reteaua neurala
     labelTest(trainedModel, image1Net)
     labelTest(trainedModel, image2Net)
     labelTest(trainedModel, image3Net)
 
-    # testWholeBatch(args, trainedModel, device, test_loader)
 
-    # ----------------------------------------------------#
-
-    # print(image1.shape)
-    # print(image1Net.shape)
-    # print (label1.shape)
+    # Validarea retelei folosind toata baza de date de validare
+    testWholeBatch(args, trainedModel, device, test_loader)
 
 if __name__ == '__main__':
     main()

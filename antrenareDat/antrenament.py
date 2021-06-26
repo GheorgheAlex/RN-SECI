@@ -19,7 +19,7 @@ class Net(nn.Module):
        self.conv2_batch = nn.BatchNorm2d(50)
        self.conv3 = nn.Conv2d(in_channels= 50, out_channels = 100, kernel_size = 3, stride=1)
        self.conv3_batch = nn.BatchNorm2d(100)
-       self.dropout = nn.Dropout(0.7)
+       self.dropout = nn.Dropout(0.25)
        self.fc1 = nn.Linear(in_features = 1 * 1 * 100, out_features = 500)
        self.fc2 = nn.Linear(in_features = 500, out_features = 10)
 
@@ -71,29 +71,39 @@ def train(args, model, device, train_loader, optimizer, epoch):
                        100. * batch_idx / len(train_loader), loss.item()))
 #------------------------------------------------------------#
 
+def test(args, model, device, test_loader):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()  # sum up batch loss
+            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            correct += pred.eq(target.view_as(pred)).sum().item()
+
+    test_loss /= len(test_loader.dataset)
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+        test_loss, correct, len(test_loader.dataset),
+        100. * correct / len(test_loader.dataset)))
+
 #-------- Afisare imagini din baza de date de antrenament  --------#
 def imageShow(database, title):
     dataiter = iter(database)
     images, labels = dataiter.next()
     imshow(torchvision.utils.make_grid(images[0:3]), title)
-
 #-------------------------------------------------------------------#
 
-#-------- Rezolvare punct 9  --------#
+#-------- Rezolvare punct 7 - afisare imagini din baza de date cu label-urile corespunzatoare  --------#
 def imageShowLabels(database, title):
-    classes = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')
     dataiter = iter(database)
     images, labels = dataiter.next()
-    print("Lables: ")
-    print(" ".join('%1s' % classes[labels[i]] for i in range(3))) # de rezolvat formatul la print cas a arat mai bine label-urile
     imshow(torchvision.utils.make_grid(images[0:3]), title)
-    # print(' '.join('%5s' % classes[labels[j]] for j in range(3)))
-
 #------------------------------------#
 
 def main():
-    # Training settings ? De ce a folosit asa sa transfere argumentele?
-    # ?Cum functioneaza parser-ul? De ce nu au fost stocate in niste variabile ci au fost folosite argumente?
 
     # Argumente folosite pentru algoritmii de antrenare si testare date
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -135,21 +145,30 @@ def main():
                        ])),
                         batch_size=args.batch_size, shuffle=True, **kwargs)
 
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST('../data', train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=args.test_batch_size, shuffle=True, **kwargs)
+
     model = Net().to(device)  # Instantiere RN pe dispozitivul ales
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum) # Instantiere opimizator
 
-    #----------------- Rezolvare pct 7 ------------------#
+    #----------------- Rezolvare punct 7 ------------------#
     # Afisarea a 3 imagini din baza de date de antrenament
-    # imageShowLabels(train_loader, "Training-images")
+    imageShowLabels(train_loader, "Training-images")
     #----------------------------------------------------#
 
 
-    # Antrenarea si testarea propriu-zisa a retelei neurale
+    # Antrenarea retelei neurale
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
+        test(args, model, device, test_loader)
+        # Dupa fiecare generatie fac si validare
 
-
-    if (args.save_model): # dupa antrenare se salveaza modelul
+    # Salvarea modelului daca argumentul e TRUE
+    if (args.save_model):
         torch.save(model.state_dict(), "mnist_cnn.pt")
         print("Saving trained neural network with name 'mnist_cnn.pt'")
 
